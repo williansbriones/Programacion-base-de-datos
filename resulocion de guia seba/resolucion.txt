@@ -1,0 +1,49 @@
+--Resoluciones 1:
+
+--resolucion 1.1
+select
+nombre productos
+from producto;
+---------------------
+--resolucion 1.2
+select
+nombre productos,
+precio 
+from producto;
+---------------------
+--resolucion 1.3
+select
+*
+from producto;
+---------------------
+--resolucion 1.4
+select
+nombre productos,
+TO_CHAR(round(precio * 820),'$999G999G999') as Pesos,
+TO_CHAR(precio,'$999G999D99') as dolares
+from producto;
+---------------------
+--resolucion 1.5
+select
+nombre as "nombare de productos",
+TO_CHAR(round(precio * 820),'$999G999G999') as Pesos,
+TO_CHAR(precio,'$999G999D99') as dolares
+from producto;
+---------------------
+--resolucion 1.6
+select 
+upper(nombre)
+from producto;
+---------------------
+--resolucion 1.7
+select 
+lower(nombre),
+precio
+from producto;
+---------------------
+--resolucion 1.8
+select 
+nombre,
+upper(SUbStr(nombre, 1,2))||''||SUbStr(nombre, 2)
+from fabricante;
+
