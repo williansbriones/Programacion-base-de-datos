@@ -1,0 +1,26 @@
+--caso 1
+select
+    nombre_emp ||' '|| appaterno_emp ||' '||apmaterno_emp,
+    sueldo_emp,
+    sueldo_emp * 0.4
+into
+    x_nombre_completo,
+    x_sueldo,
+    x_bonificaion
+from empleado
+where numrut_emp = x_rut;
+
+
+dbms_output.put_line('datos calculo bonificacion extra 40% del sueldo');
+dbms_output.put_line('nombre completo: '|| x_nombre_completo);
+dbms_output.put_line('run: '||x_rut);
+dbms_output.put_line('sueldo: '||x_sueldo);
+dbms_output.put_line('bonificacion extra: '||x_bonificaion );
+END;
+
+--11846972
+--18560875
+--select * from empleado where numrut_emp = 18560875;
+
+--caso 2
+
