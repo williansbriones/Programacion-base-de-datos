@@ -24,3 +24,21 @@ END;
 
 --caso 2
 
+DECLARE
+x_nombre VARCHAR2 (50);
+xrut NUMBER(30);
+x_dv varchar2 (1);
+x_estado varchar2 (10);
+x_renta number (38);
+
+BEGIN
+
+dbms_output.put_line('Datos del cliente ');
+dbms_output.put_line('---------------');
+dbms_output.put_line('Nombre: ');
+dbms_output.put_line('Run: ');
+dbms_output.put_line('Estado civil: ');
+dbms_output.put_line(Renta: );
+
+END;
+
