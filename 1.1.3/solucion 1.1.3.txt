@@ -1,26 +1,29 @@
 --caso 1
+
 DECLARE
     x_nombre_completo VARCHAR (50);
     x_sueldo NUMBER (38);
     x_bonificaion NUMBER (38);
-    x_rut NUMBER (38);
-    
+    x_rut NUMBER (38):= &x;
+    x_run VARCHAR2 (38);
 BEGIN
     select
         nombre_emp ||' '|| appaterno_emp ||' '||apmaterno_emp,
         sueldo_emp,
-        sueldo_emp * 0.4
+        sueldo_emp * 0.4,
+        to_char(numrut_emp,'99g999g999')||'-'||DVRUT_EMP
     into
         x_nombre_completo,
         x_sueldo,
-        x_bonificaion
+        x_bonificaion,
+        x_run
     from empleado
-    where numrut_emp = &x;
+    where numrut_emp = x_rut;
 
 
     dbms_output.put_line('datos calculo bonificacion extra 40% del sueldo');
     dbms_output.put_line('nombre completo: '|| x_nombre_completo);
-    dbms_output.put_line('run: '||x_rut);
+    dbms_output.put_line('run: '||x_run);
     dbms_output.put_line('sueldo: '||x_sueldo);
     dbms_output.put_line('bonificacion extra: '||x_bonificaion );
 END;
@@ -32,20 +35,127 @@ END;
 --caso 2
 
 DECLARE
-x_nombre VARCHAR2 (50);
-xrut NUMBER(30);
-x_dv varchar2 (1);
-x_estado varchar2 (10);
-x_renta number (38);
+    x_nombre VARCHAR2 (50);
+    x_rut VARCHAR2(30);
+    x_estado varchar2 (10);
+    x_renta varchar2 (38);
 
 BEGIN
 
-dbms_output.put_line('Datos del cliente ');
-dbms_output.put_line('---------------');
-dbms_output.put_line('Nombre: ');
-dbms_output.put_line('Run: ');
-dbms_output.put_line('Estado civil: ');
-dbms_output.put_line(Renta: );
+    select
+        c.nombre_cli ||' '|| c.appaterno_cli ||' '|| c.apmaterno_cli
+        ,c.numrut_cli ||'-'|| c.dvrut_cli
+        ,e.desc_estcivil
+        ,to_char(renta_cli,'$999g999g999')
+    into
+    x_nombre,
+    x_rut,
+    x_estado,
+    x_renta
+
+    from cliente c
+    join estado_civil e on (c.id_estcivil= e.id_estcivil)
+    where c.numrut_cli = &x;
+
+
+    dbms_output.put_line('Datos del cliente ');
+    dbms_output.put_line('---------------');
+    dbms_output.put_line('Nombre: '|| x_nombre);
+    dbms_output.put_line('Run: '|| x_rut);
+    dbms_output.put_line('Estado civil: '|| x_estado);
+    dbms_output.put_line('Renta: '|| x_renta);
 
 END;
 
+--caso 3
+DECLARE
+    x_nombre_completo VARCHAR (50);
+    x_run VARCHAR2 (38);
+    x_sueldo NUMBER (38);
+    x_sueldo_reajustado_1 number (38);
+    x_reajuste_1 number (38);
+    x_sueldo_reajustado_2 number (38);
+    x_reajuste_2 number (38);
+    x_porcentaje_aumento1 FLOAT (10) := &porcentaje_de_aumento1;
+    x_porcentaje_aumento2 float (10) := &Porcentaje_de_aumento2;
+    x_aum_desde number (20) := &Desde;
+    x_aum_hasta number (20) := &Hasta;
+    --x_porcentaje_aumento1 number (3) := 8;
+    --x_porcentaje_aumento2 number (3) := 20;
+    --x_aum_desde number (20) := 200000;
+    --x_aum_hasta number (20) := 400000;
+BEGIN
+    select
+        nombre_emp ||' '|| appaterno_emp ||' '|| apmaterno_emp,
+        numrut_emp ||'-'|| dvrut_emp,
+        sueldo_emp,
+        ((x_porcentaje_aumento1/100) * sueldo_emp) + sueldo_emp,
+        sueldo_emp * (x_porcentaje_aumento1/100),
+        CASE
+            WHEN sueldo_emp < x_aum_hasta and sueldo_emp > x_aum_desde  THEN (sueldo_emp * (x_porcentaje_aumento2 /100)) + sueldo_emp
+            ELSE sueldo_emp
+        END,
+        CASE
+            WHEN sueldo_emp < x_aum_hasta and sueldo_emp > x_aum_desde  THEN (sueldo_emp * (x_porcentaje_aumento2 /100))
+            ELSE 0
+        END
+        
+    into
+        x_nombre_completo,
+        x_run,
+        x_sueldo,
+        x_sueldo_reajustado_1,
+        x_reajuste_1,
+        x_sueldo_reajustado_2,
+        x_reajuste_2
+    from empleado
+    where numrut_emp = &rut;
+
+    dbms_output.put_line('Nombre del empleado: '|| x_nombre_completo);
+    dbms_output.put_line('Run: ' || x_run);
+    dbms_output.put_line('Situacion 1: aumento de sueldo en ' || x_porcentaje_aumento1 ||'% el salario de todos los empleados');
+    dbms_output.put_line('Sueldo actual: '|| x_sueldo);
+    dbms_output.put_line('Sueldo reajustado: '|| x_sueldo_reajustado_1);
+    dbms_output.put_line('Reajuste: '||x_reajuste_1 );
+    dbms_output.put_line('situacion 2: aumentar en' || x_porcentaje_aumento2|| '% el salario de los empleados que poseen salario entre ' ||x_aum_desde || ' y ' || x_aum_hasta);
+    dbms_output.put_line('Sueldo actual: '|| x_sueldo);
+    dbms_output.put_line('Sueldo reajustado: '|| x_sueldo_reajustado_2);
+    dbms_output.put_line('Reajuste: '||x_reajuste_2 );
+    
+END;
+--12260812
+--11999100
+
+--caso 4
+
+DECLARE
+    x_id_propiedad VARCHAR2(2);
+    x_tipo_propiedad VARCHAR2(50);
+    x_total_propiedades NUMBER(20);
+    x_valor_propiedades varchar2(20);
+begin
+    for i in (select id_tipo_propiedad as letra from tipo_propiedad)
+    
+    loop
+    
+        select
+        t.id_tipo_propiedad,
+        t.desc_tipo_propiedad,
+        count(*),
+        to_char(sum(valor_arriendo),'$999g999g999')
+        into
+        x_id_propiedad,
+        x_tipo_propiedad,
+        x_total_propiedades,
+        x_valor_propiedades
+    from propiedad p 
+       RIGHT join tipo_propiedad t
+            on (p.id_tipo_propiedad = t.id_tipo_propiedad)
+        where t.id_tipo_propiedad = i.letra
+    group by t.id_tipo_propiedad, t.desc_tipo_propiedad;
+    
+        dbms_output.put_line('RESUMEN DE: '|| x_tipo_propiedad);
+        dbms_output.put_line('TOTAL DE PROPIEDADES: '|| x_total_propiedades);
+        dbms_output.put_line('VALOR TOTAL DE ARRIENDO: '|| x_valor_propiedades);
+    end loop;
+end;
