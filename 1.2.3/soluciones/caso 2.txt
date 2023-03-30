@@ -1,0 +1,62 @@
+var v_rut_emp varchar2(10);
+exec :v_rut_emp:=12642309;
+declare
+v_apellido_pa VARCHAR2(20);
+v_fecha_now number(10);
+v_DV empleado.DVRUN_EMP%type;
+v_nombre varchar2(50);
+v_usuario varchar(50);
+v_clave1 varchar(100);
+v_clave2 varchar(100);
+v_años_en_la_empresa number(7);
+v_estado_civil ESTADO_CIVIL.ID_ESTADO_CIVIL%type;
+begin
+
+select
+    To_number(to_char(sysdate,'mmyyyy')) as fecha_now,
+    e.dvRun_emp as DV,
+    e.pnombre_emp||' '||e.snombre_emp||' '||e.appaterno_emp||' '|| e.apmaterno_emp as nombre,
+    substr(e.pnombre_emp,1,3)||length(e.pnombre_emp)||'*'||substr(e.SUELDO_BASE,-1)||
+    e.DVRUN_EMP as usuario,
+    (to_number(to_char(e.FECHA_NAC,'yyyy'))+2)||substr(to_char(e.sueldo_base),-3,3)-1 as clave1,
+    to_number(to_char(sysdate,'MMyyyy'))||substr(c.nombre_comuna,1,1) as clave2,
+    round(months_between(sysdate,FECHA_CONTRATO)/12) as años_en_la_empresa,
+    ID_ESTADO_CIVIL as estado_civil,
+    e.appaterno_emp as pnombre
+into
+    v_fecha_now,
+    v_DV,
+    v_nombre,
+    v_usuario,
+    v_clave1,
+    v_clave2,
+    v_años_en_la_empresa,
+    v_estado_civil,
+    v_apellido_pa
+from empleado e join comuna c on (c.ID_COMUNA=e.ID_COMUNA)
+    where numrun_emp = :v_rut_emp;
+    
+    if v_años_en_la_empresa < 10 then v_usuario := v_usuario||v_años_en_la_empresa||'X';
+    else 
+    v_usuario := v_usuario||v_años_en_la_empresa;
+    end if;
+    
+    if v_estado_civil = 10 or v_estado_civil = 60 then v_clave1 := substr(:v_rut_emp, 3,1)||v_clave1 || lower(substr(v_apellido_pa,1,2))||v_clave2;
+    elsif v_estado_civil = 20 or v_estado_civil = 30 then v_clave1 := substr(:v_rut_emp, 3,1)||v_clave1 || lower(substr(v_apellido_pa,1,1))||lower(substr(v_apellido_pa,-1)) ||v_clave2;
+    elsif v_estado_civil = 40 then v_clave1 := substr(:v_rut_emp, 3,1)||v_clave1 || lower(substr(v_apellido_pa,-3,2))||v_clave2;
+    else v_clave1 := substr(:v_rut_emp, 3,1)||v_clave1 || lower(substr(v_apellido_pa,-2,2))||v_clave2;
+    end if;
+    
+    if sql%found THEN
+    insert INTO USUARIO_CLAVE(MES_ANNO,NUMRUN_EMP,DVRUN_EMP,NOMBRE_EMPLEADO,NOMBRE_USUARIO,CLAVE_USUARIO)
+    values(v_fecha_now,:v_rut_emp,v_DV,v_nombre,v_usuario,v_clave1);
+    dbms_output.put_line('guardo registros de '|| v_nombre);
+    commit;
+    else 
+        dbms_output.put_line('no guardo registros');
+    end if;
+
+
+    dbms_output.put_line('compila');
+--arreglar problema donde oracle elimina los 0
+end;

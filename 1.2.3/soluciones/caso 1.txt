@@ -1,0 +1,91 @@
+var act_fecha number;
+var id_comuna_maria number;
+var id_comuna_curacavi number;
+var id_comuna_Talagante number;
+var id_comuna_monte number;
+var id_comuna_buin number;
+-------------------------
+var v_moto_maria number;
+var v_moto_curacavi number;
+var v_moto_talagante number;
+var v_moto_monte number;
+var v_moto_buin number;
+var v_rut_emp number;
+------------------------
+------------------------
+exec :act_fecha := 2023;
+exec :id_comuna_maria := 117;
+exec :id_comuna_curacavi := 118;
+exec :id_comuna_Talagante := 119;
+exec :id_comuna_monte := 120;
+exec :id_comuna_buin := 121;
+-------------------------
+exec :v_moto_maria := 20000;
+exec :v_moto_curacavi := 25000;
+exec :v_moto_talagante := 30000;
+exec :v_moto_monte := 35000;
+exec :v_moto_buin := 40000;
+exec :v_rut_emp := 12868553;
+
+--11846972
+--12272880
+--12113369
+--11999100
+--12868553
+
+
+declare
+    v_nombre_completo varchar(200);
+    v_dv EMPLEADO.DVRUN_EMP%TYPE;
+    v_sueldo EMPLEADO.SUELDO_BASE%type;
+    v_porcentaje number(3);
+    v_mov_base number(10);
+    v_mov_adicional number(10);
+    v_mov_total number(10);
+    v_id_comuna EMPLEADO.ID_COMUNA%type;
+begin
+        SELECT
+            pnombre_emp||' '|| snombre_emp||' '||appaterno_emp||' '|| apmaterno_emp as nombre,
+            dvrun_emp as dv,
+            sueldo_base as SueldoBase,
+            id_comuna as comuna
+        into
+            v_nombre_completo,
+            v_dv,
+            v_sueldo,
+            v_id_comuna
+        from empleado
+            where numrun_emp = :v_rut_emp;
+            
+        case v_id_comuna
+            when :id_comuna_maria THEN v_mov_adicional := :v_moto_maria;
+            when :id_comuna_curacavi THEN v_mov_adicional := :v_moto_curacavi;
+            when :id_comuna_Talagante THEN v_mov_adicional := :v_moto_talagante;
+            when :id_comuna_monte THEN v_mov_adicional := :v_moto_monte;
+            when :id_comuna_buin THEN v_mov_adicional := :v_moto_buin;
+            ELSE v_mov_adicional:= 0;
+        END CASE;
+        --solucionar problema con if 
+        v_porcentaje := trunc(v_sueldo*0.00001);
+        v_mov_base := v_sueldo*(v_porcentaje/100);
+        v_mov_total := v_mov_base+v_mov_adicional;
+            
+        insert into PROY_MOVILIZACION (ANNO_PROCESO,NUMRUN_EMP,DVRUN_EMP,NOMBRE_EMPLEADO,SUELDO_BASE,
+        PORC_MOVIL_NORMAL,VALOR_MOVIL_NORMAL,VALOR_MOVIL_EXTRA,VALOR_TOTAL_MOVIL)
+        VALUES(:act_fecha,:v_rut_emp,v_dv,v_nombre_completo,v_sueldo,v_porcentaje,v_mov_base,v_mov_adicional,v_mov_total);
+        
+    commit; 
+end;
+
+
+---paraborrar contenido
+begin 
+
+    for i in (SELECT NUMRUN_EMP as rut FROM PROY_MOVILIZACION)
+        loop
+        delete from PROY_MOVILIZACION
+            where NUMRUN_EMP = i.rut;
+
+        end loop;
+end;
+

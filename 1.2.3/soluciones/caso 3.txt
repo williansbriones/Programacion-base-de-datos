@@ -1,0 +1,42 @@
+var v_patente VARCHAR2(7);
+var v_porcentaje_descuento number;
+var v_año_actual number;
+exec :v_patente := 'VR1003';
+exec :v_porcentaje_descuento := 22.5;
+exec :v_año_actual := 2022;
+declare 
+v_cant_de_arriendos number(10);
+v_valor_arriendo camion.VALOR_ARRIENDO_DIA%TYPE;
+v_valor_garandia camion.VALOR_GARANTIA_DIA%TYPE;
+begin
+    select 
+        count(*) as cantidad_de_veces_arrendado,
+        sum(VALOR_ARRIENDO_DIA)/count(*) as valor_arriendo,
+        sum(VALOR_GARANTIA_DIA)/count(*) as valor_grantia
+    into
+        v_cant_de_arriendos,
+        v_valor_arriendo,
+        v_valor_garandia
+    from camion c 
+        join arriendo_camion a on (c.NRO_PATENTE = a.NRO_PATENTE)
+    where c.nro_patente=:v_patente and to_char(FECHA_INI_ARRIENDO,'yyyy') = to_char(sysdate,'yyyy')-1;
+    
+    dbms_output.put_line('valor grarantia: ' ||v_valor_garandia);
+    dbms_output.put_line('valor Arriendo: ' ||v_valor_arriendo);
+    dbms_output.put_line('cantidad de arriendos: ' ||v_cant_de_arriendos);
+    dbms_output.put_line('-----------------------');
+    --if v_cant_de_arriendos < 5 
+    --then 
+      --  v_valor_arriendo := v_valor_arriendo+(v_valor_arriendo*(:v_porcentaje_descuento/100));
+       -- v_valor_garandia := v_valor_garandia+(v_valor_garandia*(:v_porcentaje_descuento/100));
+    --end if;
+    
+    dbms_output.put_line('valor grarantia: ' ||v_valor_garandia);
+    dbms_output.put_line('valor Arriendo: ' ||v_valor_arriendo);
+    dbms_output.put_line('cantidad de arriendos: ' ||v_cant_de_arriendos);
+    
+    insert into HIST_ARRIENDO_ANUAL_CAMION(ANNO_PROCESO,NRO_PATENTE,VALOR_ARRIENDO_DIA,VALOR_GARACTIA_DIA,TOTAL_VECES_ARRENDADO)
+    values(:v_año_actual,:v_patente,v_valor_arriendo,v_valor_garandia,v_cant_de_arriendos);
+    
+    commit;
+end;
