@@ -1,0 +1,128 @@
+var x_anios number;
+var x_mes number;
+
+exec :x_anios:=2023;
+exec :x_mes:=05;
+
+declare 
+v_nombre VARCHAR2(20);
+v_cantidad_ventas number(15);
+v_monto_venta number(15);
+v_por_categoria float(15);
+v_nombre_grupo VARCHAR2(20);
+v_por_grupo float(15);
+v_asignacion_espcial number(15);
+v_bono_grupo number(15);
+v_incentivo_categria number(15);
+v_anios_en_empresa number(15);
+v_bono_antiguedad number(15);
+begin 
+
+    for ven in (select id_vendedor as id from vendedor)
+    loop
+
+
+    select 
+    v1.nombre
+    ,v2.cantidad_ventas
+    ,v1.venta_total_mes
+    ,v1.por_categoria
+    ,v1.nom_grupo
+    ,v1.por_grupo
+    
+    into
+    v_nombre
+    ,v_cantidad_ventas
+    ,v_monto_venta
+    ,v_por_categoria
+    ,v_nombre_grupo
+    ,v_por_grupo
+    
+    from (select 
+    id_vendedor as id_vendedor
+    ,nombre as nombre
+    ,sum(venta) as venta_total_mes
+     ,por_categoria as por_categoria
+    ,nom_grupo as nom_grupo
+    ,por_grupo as por_grupo
+    
+from (select
+    d.id_venta as id_venta
+    ,ven.APELLIDOS  ||' '|| ven.NOMBRES as nombre
+    ,a.precio * d.cantidad as venta
+    ,v.id_vendedor as id_vendedor
+    ,c.PORCENTAJE as por_categoria
+    ,g.NOM_GRUPO as nom_grupo
+    ,g.PORC as por_grupo
+from detalleventa d
+    join articulo a on (d.id_articulo = a.id_articulo)
+    join venta v on (v.id_venta = d.id_venta)
+    join VENDEDOR ven on (v.ID_VENDEDOR = ven.ID_VENDEDOR)
+    join grupo g on (g.id_grupo = ven.id_grupo)
+    join categoria c on (c.ID_CATEGORIA = ven.ID_CATEGORIA)
+    where to_char(v.fecha_venta,'mm') = :x_mes)
+    group by id_vendedor, nombre, por_categoria, nom_grupo, por_grupo
+    order by id_vendedor) v1
+    join (select
+    ven.id_vendedor as id_vendedor
+    ,ven.APELLIDOS  ||' '|| ven.NOMBRES as nombre
+    ,count(*) as cantidad_ventas
+from detalleventa d
+    join articulo a on (d.id_articulo = a.id_articulo)
+    join venta v on (v.id_venta = d.id_venta)
+    join VENDEDOR ven on (v.ID_VENDEDOR = ven.ID_VENDEDOR)
+    where to_char(v.fecha_venta,'mm') = :x_mes
+    group by ven.id_vendedor
+    ,ven.APELLIDOS  ||' '|| ven.NOMBRES
+    order by  ven.id_vendedor) v2 on (v1.id_vendedor = v2.id_vendedor)
+    where v1.id_vendedor = ven.id;
+    
+        select rtrim(trunc(months_between(sysdate,FECCONTRATO)/12))
+    as tiempo_empresa
+    into
+    v_anios_en_empresa
+    from vendedor
+    where ID_VENDEDOR = ven.id;
+    
+    if  v_cantidad_ventas >= 10
+        then 
+            v_asignacion_espcial:= v_monto_venta*(15/100);
+    elsif v_cantidad_ventas  = 8 or v_cantidad_ventas  = 9   
+        then 
+            v_asignacion_espcial:= v_monto_venta*(12/100);
+            
+    elsif v_cantidad_ventas  = 6 or v_cantidad_ventas  = 7   
+        then 
+            v_asignacion_espcial:= v_monto_venta*(10/100);
+            
+    elsif v_cantidad_ventas  = 3 or v_cantidad_ventas  = 4 or v_cantidad_ventas  = 5   
+        then 
+            v_asignacion_espcial:= v_monto_venta*(8/100);
+            
+    elsif v_cantidad_ventas  = 1 or v_cantidad_ventas  = 2    
+        then 
+            v_asignacion_espcial:= v_monto_venta*(5/100); 
+    
+    else
+        v_asignacion_espcial:= 0;
+    end if;
+    
+    if v_anios_en_empresa > 10
+        then v_bono_antiguedad := v_monto_venta*(22/100);
+    elsif v_anios_en_empresa <= 10 and v_anios_en_empresa >= 6
+        then  v_bono_antiguedad := v_monto_venta*(16/100);
+    elsif v_anios_en_empresa <= 5 and v_anios_en_empresa >= 3
+        then  v_bono_antiguedad := v_monto_venta*(7/100);
+    else 
+        v_bono_antiguedad := 0;
+    
+    end if;
+    
+    
+    v_bono_grupo := v_monto_venta * (v_por_grupo/100);
+    v_incentivo_categria := v_monto_venta * (v_por_categoria/100);
+    
+    dbms_output.put_line(v_bono_antiguedad);
+    
+    end loop;
+end;
