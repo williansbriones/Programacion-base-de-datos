@@ -1,0 +1,25 @@
+VAR CATEGORIA VARCHAR2(250);
+EXEC :CATEGORIA := 'A';
+declare 
+cursor c_vendedor is (select id_vendedor, nombres||' '||apellidos, sueldo from vendedor where sueldo <=400000 and id_categoria = :CATEGORIA);
+v_id_ven vendedor.id_vendedor%TYPE;
+v_nombre varchar2(250);
+v_sueldo vendedor.sueldo%TYPE;
+begin
+open c_vendedor;
+DBMS_OUTPUT.PUT_LINE('--------------------------------');
+DBMS_OUTPUT.PUT_LINE('Informe de empleados');
+DBMS_OUTPUT.PUT_LINE('--------------------------------');
+DBMS_OUTPUT.PUT_LINE('Categoria: '||:CATEGORIA);
+loop 
+    fetch c_vendedor into v_id_ven, v_nombre, v_sueldo;
+    exit when c_vendedor%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(
+    RPAD(v_id_ven,5)   ||''||
+    RPAD(v_nombre,20)   ||''||
+    RPAD(to_char(v_sueldo,'Fml999g999') ,10)
+    );
+end loop;
+dbms_output.put_line('✔Bloque se ejecuta correctamente');
+
+end;

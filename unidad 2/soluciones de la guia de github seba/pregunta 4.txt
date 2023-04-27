@@ -1,0 +1,19 @@
+declare 
+cursor c_vendedor is (select id_vendedor, nombres||' '||apellidos, sueldo from vendedor where sueldo <=354000);
+v_id_ven vendedor.id_vendedor%TYPE;
+v_nombre varchar2(250);
+v_sueldo vendedor.sueldo%TYPE;
+v_contador number;
+begin
+open c_vendedor;
+v_contador := 0;
+loop 
+    v_contador := 1 + v_contador;
+    fetch c_vendedor into v_id_ven, v_nombre, v_sueldo;
+    dbms_output.put_line('['||v_contador||'] '||'Empleado N° '||v_id_ven||' - '||v_nombre||' tiene un sueldo de '||to_char(v_sueldo,'Fml999g999g999'));
+    dbms_output.put_line('--------------------------------------');
+    exit when c_vendedor%NOTFOUND;
+end loop;
+dbms_output.put_line('✔Bloque se ejecuta correctamente');
+
+end;
