@@ -1,25 +1,36 @@
-VAR CATEGORIA VARCHAR2(250);
-EXEC :CATEGORIA := 'A';
-declare 
-cursor c_vendedor is (select id_vendedor, nombres||' '||apellidos, sueldo from vendedor where sueldo <=400000 and id_categoria = :CATEGORIA);
-v_id_ven vendedor.id_vendedor%TYPE;
-v_nombre varchar2(250);
+DECLARE
+CURSOR c_vendedor IS SELECT id_vendedor, nombres||' '||apellidos, sueldo, id_categoria FROM vendedor where sueldo <=400000 ORDER BY id_categoria;
+v_nombre VARCHAR2(50);
+v_categoria vendedor.id_categoria%TYPE;
 v_sueldo vendedor.sueldo%TYPE;
-begin
-open c_vendedor;
-DBMS_OUTPUT.PUT_LINE('--------------------------------');
-DBMS_OUTPUT.PUT_LINE('Informe de empleados');
-DBMS_OUTPUT.PUT_LINE('--------------------------------');
-DBMS_OUTPUT.PUT_LINE('Categoria: '||:CATEGORIA);
-loop 
-    fetch c_vendedor into v_id_ven, v_nombre, v_sueldo;
-    exit when c_vendedor%NOTFOUND;
-    DBMS_OUTPUT.PUT_LINE(
-    RPAD(v_id_ven,5)   ||''||
-    RPAD(v_nombre,20)   ||''||
-    RPAD(to_char(v_sueldo,'Fml999g999') ,10)
-    );
-end loop;
-dbms_output.put_line('✔Bloque se ejecuta correctamente');
-
-end;
+v_id_vendedor vendedor.id_vendedor%TYPE;
+v_validador_categoria vendedor.id_categoria%TYPE;
+BEGIN
+    OPEN c_vendedor;
+    DBMS_OUTPUT.PUT_LINE('-------------------------------------');
+    DBMS_OUTPUT.PUT_LINE('Informe de empleados');
+    loop
+        FETCH c_vendedor INTO v_id_vendedor, v_nombre, v_sueldo, v_categoria;
+        exit when c_vendedor%NOTFOUND;
+        IF v_categoria = v_validador_categoria
+            THEN 
+            DBMS_OUTPUT.PUT_LINE(
+                RPAD(v_id_vendedor,7) ||' '||
+                RPAD(v_nombre,20)  ||' '||
+                RPAD(TO_CHAR(v_sueldo,'Fml999G999G999'),20)
+                );
+        ELSE 
+            v_validador_categoria := v_categoria;
+            DBMS_OUTPUT.PUT_LINE('--------------------------------');
+            DBMS_OUTPUT.PUT_LINE('Categoria: '||v_categoria);
+            DBMS_OUTPUT.PUT_LINE('--------------------------------');
+            DBMS_OUTPUT.PUT_LINE(
+                RPAD(v_id_vendedor,7) ||' '||
+                RPAD(v_nombre,20) ||' '||
+                RPAD(TO_CHAR(v_sueldo,'Fml999G999G999'),20)
+                
+                );
+        end if;
+        
+    end loop;
+END;

@@ -1,0 +1,56 @@
+DECLARE
+
+CURSOR c_personas IS    (SELECT 'Vendedor', id_vendedor, nombres||' '||apellidos, rut_vendedor, id_grupo, id_categoria,sueldo FROM vendedor
+                        UNION
+                        SELECT 'Cliente', id_cliente, nombre_cliente, null, null,null, null FROM cliente
+                        );
+                        
+TYPE r_personas IS RECORD(
+    tipo_persona varchar2(150) ,
+    id_persona number(10) ,
+    nombre varchar(150), 
+    rut VARCHAR2(150) ,
+    grupo VARCHAR2(10) ,
+    categoria VARCHAR2(10) ,
+    sueldo number(20)
+);
+v_persona r_personas;
+v_grupo varchar2(15);
+v_categoria VARCHAR2(15);
+BEGIN
+    OPEN c_personas;
+    DBMS_OUTPUT.PUT_LINE('----------------------------------------------------------------------------------------------------');
+    DBMS_OUTPUT.PUT_LINE(
+    RPAD('TIPO',9) ||''||
+    RPAD('ID',5) ||''||
+    RPAD('NOMBRE COMPLETO',29) ||''||
+    RPAD('RUN',11) ||''||
+    RPAD('EQUIPO',10) ||''||
+    RPAD('CATEGORIA',15) ||''||
+    RPAD('SUELDO',20) 
+    );
+    DBMS_OUTPUT.PUT_LINE('----------------------------------------------------------------------------------------------------');
+    LOOP
+        FETCH c_personas into v_persona;
+        EXIT WHEN c_personas%NOTFOUND;
+    
+        if v_persona.grupo is null and v_persona.categoria is null
+            then
+            v_grupo := null;
+            v_categoria := null;
+        else
+            v_grupo := 'Equipo ' || v_persona.grupo;
+            v_categoria := ' Categoria '|| v_persona.categoria;
+        end if;
+        DBMS_OUTPUT.PUT_LINE(
+        RPAD(v_persona.tipo_persona,9) ||''||
+        RPAD(v_persona.id_persona,5) ||''||
+        RPAD(v_persona.nombre ,29) ||''||
+        RPAD(NVL(v_persona.rut,' '),11) ||''||
+        RPAD(NVL(v_grupo,' '),10) ||''||
+        RPAD(NVL(v_categoria,' '),15) ||''||
+        RPAD(TO_CHAR(NVL(v_persona.sueldo,0),'Fml999G999'),20) 
+        );
+        
+    END LOOP;
+END; 
