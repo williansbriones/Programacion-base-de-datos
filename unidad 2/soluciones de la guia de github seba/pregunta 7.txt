@@ -1,0 +1,78 @@
+DECLARE
+TYPE r_empleado IS RECORD(
+    id_empleado number,
+    nombre varchar2(50)
+);
+TYPE r_venta IS RECORD(
+    id_venta number,
+    nom_cliente VARCHAR2(50),
+    fecha date,
+    valor number
+);
+v_venta r_venta;
+v_empleado r_empleado;
+CURSOR c_ventas_vendedor IS (SELECT 
+                                s.id_venta
+                                ,c.nombre_cliente
+                                ,s.fecha_venta
+                                ,nvl(sum(d.cantidad*a.precio),0)
+                            FROM vendedor v
+                                join venta s on (s.id_vendedor = v.id_vendedor)
+                                join cliente c on (c.id_cliente = s.id_cliente)
+                                join detalleventa d on (d.id_venta=s.id_venta)
+                                join articulo a on (a.id_articulo=d.id_articulo)
+                            where v.id_vendedor = v_empleado.id_empleado
+                            GROUP BY v.id_vendedor, s.id_venta,s.fecha_venta, c.nombre_cliente);
+CURSOR c_empleado IS (select 
+            id_vendedor,
+            nombres ||' '|| apellidos
+        from vendedor);
+
+BEGIN
+    OPEN c_empleado;
+    LOOP
+        FETCH c_empleado INTO v_empleado;
+        EXIT WHEN c_empleado%NOTFOUND;
+        begin
+            OPEN c_ventas_vendedor;
+            loop
+                FETCH c_ventas_vendedor into v_venta;
+                EXIT WHEN c_ventas_vendedor%NOTFOUND;
+                dbms_output.put_line('[Boleta] El empleado '|| v_empleado.nombre ||' Realizó una Boleta #'|| v_venta.id_venta || ' el '
+                || v_venta.fecha || ' para el cliente ' || v_venta.nom_cliente || ' por '|| to_char(v_venta.valor,'Fml999g999g999'));
+            end loop;
+            CLOSE c_ventas_vendedor;
+        end;
+        
+    END LOOP;
+END;
+
+
+
+
+-----consultas
+---select de compra realizada por un vendedor
+SELECT 
+    v.id_vendedor
+    ,c.nombre_cliente
+    ,s.id_venta
+    ,s.fecha_venta
+    ,nvl(sum(d.cantidad*a.precio),0)
+FROM vendedor v
+join venta s on (s.id_vendedor = v.id_vendedor)
+join cliente c on (c.id_cliente = s.id_cliente)
+join detalleventa d on (d.id_venta=s.id_venta)
+join articulo a on (a.id_articulo=d.id_articulo)
+where to_char(fecha_venta,'MM') = '04'
+GROUP BY v.id_vendedor, s.id_venta, s.fecha_venta, c.nombre_cliente
+;
+
+select * from venta;
+select * from detalleventa;
+select * from articulo;
+
+
+select 
+id_vendedor,
+nombres || apellidos
+from vendedor;
