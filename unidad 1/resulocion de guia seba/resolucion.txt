@@ -217,3 +217,289 @@ select
 from producto
 where precio <= 180
 order by precio desc, nombre asc;
+
+
+
+-------------------------
+Multi tabla
+--------------------------
+--2.1
+select 
+p.nombre
+,p.precio
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo;
+--2.2
+
+select 
+p.nombre
+,p.precio
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo
+order by f.nombre;
+
+--2.3
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo
+order by f.nombre;
+
+--2.4
+select * from(SELECT
+                p.nombre as NombreProducto
+                ,p.precio as Precio
+                ,f.nombre as NombreFabricante
+            FROM PRODUCTO P
+                JOIN fabricante f on (f.codigo =p.codigo_fabricante)
+            ORDER by p.precio)
+where rownum = 1;
+
+--2.5
+select * from(SELECT
+                p.nombre as NombreProducto
+                ,p.precio as Precio
+                ,f.nombre as NombreFabricante
+            FROM PRODUCTO P
+                JOIN fabricante f on (f.codigo =p.codigo_fabricante)
+            ORDER by p.precio desc)
+where rownum = 1;
+
+--2.6
+
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and f.codigo = 1001
+order by f.nombre;
+
+--2.7
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and f.codigo = 1005 and p.precio > 200
+order by f.nombre;
+--2.8
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and (f.codigo = 1000 or f.codigo = 1002 or f.codigo = 1004)
+order by f.nombre;
+
+--2.9
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and f.codigo in (1000, 1002, 1004)
+order by f.nombre;
+
+--2.10
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and  substr(f.nombre,-1) = 'e'
+order by f.nombre;
+
+--2.11
+
+select 
+p.codigo,
+p.nombre
+,f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and f.nombre LIKE '%w%'
+order by f.nombre;
+
+--2.12
+select 
+p.nombre
+,p.precio
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo and precio >= 180
+order by p.precio desc, p.nombre;
+
+--2.13
+select 
+f.codigo
+,f.nombre
+from producto p, fabricante f
+where p.codigo_fabricante = f.codigo
+order by f.codigo;
+
+--3.1
+select 
+f.codigo
+,f.nombre
+,p.nombre
+from producto p
+    RIGHT join fabricante f on (f.codigo = p.codigo_fabricante);
+
+--3.2
+select 
+f.codigo
+,f.nombre
+from producto p
+    RIGHT join fabricante f on (f.codigo = p.codigo_fabricante)
+    where p.nombre is null;
+
+--4.1
+select count(*) from producto;
+
+--4.2
+select count(*) from fabricante;
+
+--4.3
+select count(DISTINCT(codigo_fabricante)) from producto;
+
+--4.4
+select round(avg(precio)) from producto;
+
+--4.5
+select min(nombre),min(precio) from producto;
+
+--4.6
+select max(nombre),max(precio) from producto;
+
+--los ejercicios 4.7 y 4.8 son iguales a  los dos anteriores
+
+--4.9
+select sum(precio) from producto;
+
+--4.10
+select
+count(p.precio)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+where f.codigo = 1000;
+
+--4.11
+select
+nvl(avg(p.precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+where f.codigo = 1000;
+
+--4.12
+select
+nvl(min(p.precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+where f.codigo = 1000;
+
+--4.13
+select
+nvl(max(p.precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+where f.codigo = 1000;
+
+--4.14
+select
+nvl(sum(p.precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+where f.codigo = 1000;
+
+--4.15
+select
+nvl(max(p.precio),0)
+,nvl(min(p.precio),0)
+,nvl(avg(p.precio),0)
+,count(p.nombre)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+where f.codigo = 1005;
+
+--4,16
+select
+f.nombre
+,count(precio)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+group by f.nombre
+order by count(precio) desc;
+
+4.17
+select
+f.nombre
+,nvl(max(precio),0)
+,nvl(min(precio),0)
+,nvl(avg(precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+group by f.nombre;
+
+4.18
+select
+f.nombre
+,nvl(max(precio),0)
+,nvl(min(precio),0)
+,nvl(avg(precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+having nvl(avg(precio),0)>200
+group by f.nombre;
+
+
+--4.19
+select
+f.nombre
+,nvl(max(precio),0)
+,nvl(min(precio),0)
+,nvl(avg(precio),0)
+from
+producto p 
+   RIGHT join fabricante f
+        on (p.codigo_fabricante = f.codigo)
+having nvl(avg(precio),0)>200
+group by f.nombre;
+
+--4.20
+select count(precio)
+from producto
+where precio >= 180;
+
+--4.21
+select codigo_fabricante, count(*) from producto
+where precio > 180
+group by codigo_fabricante;
