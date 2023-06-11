@@ -1,0 +1,76 @@
+DECLARE
+    TYPE r_profesional is record(
+        run profesional.numrun_prof%TYPE,
+        nombre varchar2(250),
+        puntaje profesional.puntaje%TYPE,
+        sueldo profesional.sueldo%TYPE,
+        sueldo_adicional number
+                            );
+    TYPE r_profesion is record(
+        codigo profesion.cod_profesion% TYPE,
+        nombre profesion.NOMBRE_PROFESION%TYPE
+    );
+    CURSOR c1 IS
+        SELECT cod_profesion
+                ,NOMBRE_PROFESION
+            FROM profesion
+            where cod_profesion in (select cod_profesion
+                                  from profesional);
+
+    CURSOR c2 (n NUMBER) IS
+    SELECT 
+        numrun_prof
+        ,appaterno||' '||nombre
+        ,puntaje
+        ,sueldo
+        ,sueldo * 1.1
+    FROM profesional
+    WHERE cod_profesion = n;
+    
+    v_primer boolean := true;
+    counter number := 0;
+    obj_profesional r_profesional;
+    obj_profesion r_profesion;
+    
+BEGIN
+    OPEN c1;
+    
+    WHILE v_primer 
+    LOOP
+        fetch c1 into obj_profesion;
+        IF c1%notfound
+            then 
+            exit;
+        end if;
+        dbms_output.put_line('####### LISTA DE CONSULTORES DE PROFESION ' || '"' || UPPER(obj_profesion.nombre || '"'));
+        dbms_output.put_line(CHR(13));   
+        dbms_output.put_line(lpad('-',65,'-'));
+        dbms_output.put_line('  RUN  NOMBRE CONSULTOR      PUNTAJE  SUELDO ACTUAL   NUEVO SUELDO');
+        dbms_output.put_line(lpad('-',65,'-'));
+        counter := 0;
+        open c2 (obj_profesion.codigo);
+        -----fin de  el promer bucle
+        while v_primer 
+        loop
+            fetch c2 into obj_profesional;
+            IF c2%notfound
+                then 
+                close c2;
+                exit;
+            end if;
+        counter := counter + 1;
+        dbms_output.put_line(rpad(obj_profesional.run,10,' ')
+        || ' ' || RPAD(obj_profesional.nombre, 20,' ')
+        || ' ' || TO_CHAR(obj_profesional.puntaje,'999')
+        || ' ' || rpad(TO_CHAR(obj_profesional.sueldo, '$9G999G999'),15, ' ')
+        || ' ' || TO_CHAR(obj_profesional.sueldo_adicional * 1.1, '$9G999G999'));
+        end loop;
+        dbms_output.put_line(lpad('-',65,'-'));      
+        dbms_output.put_line('Total de consultores : ' || counter);      
+        dbms_output.put_line(CHR(12));
+    end loop;
+    
+    DBMS_OUTPUT.PUT_LINE('✔CORRE SCRIPT');
+
+ END;
+

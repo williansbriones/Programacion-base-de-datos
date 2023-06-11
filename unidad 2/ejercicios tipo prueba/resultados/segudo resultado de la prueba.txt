@@ -1,0 +1,103 @@
+declare
+-----------------------------------------------inicio de los cursores
+cursor c_profecional is 
+                        select 
+                            p.numrun_prof
+                            ,p.nombre ||' '|| p.appaterno
+                            ,pr.nombre_profesion
+                            ,count(INICIO_ASESORIA)
+                            ,sum(HONORARIO)
+                            ,0
+                            ,0
+                            ,0
+                            ,0
+                            ,0
+                            ,c.COD_COMUNA
+                            ,c.CODEMP_COMUNA
+                            ,p.puntaje
+                            ,tc.INCENTIVO
+                            ,pr.asignacion
+                            ,p.sueldo
+                        from profesional p
+                            join asesoria a on (p.numrun_prof = a.numrun_prof)
+                            join profesion pr on (p.cod_profesion = pr.cod_profesion)
+                            join comuna c on (c.COD_COMUNA = p.COD_COMUNA)
+                            join tipo_contrato tc on (tc.cod_tpcontrato = p.cod_tpcontrato)
+                            where to_char(a.INICIO_ASESORIA,'mmyyyy') = '062021'
+                            group by p.numrun_prof, p.nombre, p.appaterno,pr.nombre_profesion,
+                            pr.COD_PROFESION,c.CODEMP_COMUNA,c.COD_COMUNA,p.puntaje,tc.INCENTIVO,
+                            pr.asignacion,p.sueldo
+                            order by pr.nombre_profesion, p.appaterno, p.nombre;
+------------------------------------------------------------------------------------------- fin del primer cursor
+cursor c_evalucion is select * from evaluacion;
+    
+
+-------------------------------------------------------------------------------------------creacion de varray
+TYPE type_array IS VARRAY(6) 
+        OF number NOT NULL;
+-------------------------------------------------------------------------------------------Inicio de los records
+TYPE r_profecional is record (
+    run             PROFESIONAL.NUMRUN_PROF%TYPE,--✔
+    nombre          varchar2(100),--✔       
+    nom_profesion   PROFESION.NOMBRE_PROFESION%TYPE,--✔
+    num_ascesorias  number,--✔                
+    honorarios      number,--✔
+    asig_mov        number,--✔
+    asig_eval       number,--✔
+    asig_tipo_cont  number,--✔
+    asig_profesion  number,--✔
+    asig_total      number,--
+    num_comuna          PROFESIONAL.COD_COMUNA%TYPE,--✔
+    num_emp_comuna  COMUNA.CODEMP_COMUNA%TYPE,--✔
+    puntaje profesional.puntaje%TYPE,--✔
+    contrato_porc TIPO_CONTRATO.INCENTIVO%type,--✔
+    asignacion_profesion PROFESION.asignacion%TYPE,--✔
+    sueldo PROFESIOnal.sueldo%type--✔
+);
+----------------------------------------------------------------------------variables en general
+obj_profecional r_profecional;
+array_comuna type_array;
+
+begin 
+    array_comuna := type_array(20,10,20,30,40,25000);
+    
+    open c_profecional; 
+    loop
+        fetch c_profecional into obj_profecional;
+        exit when c_profecional%notfound;
+        ---------------asignacion de monto por comuna
+        if obj_profecional.num_comuna != array_comuna(1)
+            then 
+            if obj_profecional.num_emp_comuna = array_comuna(2)
+                then obj_profecional.asig_mov := round(obj_profecional.honorarios * 0.02);
+            elsif obj_profecional.num_emp_comuna = array_comuna(3)
+                then obj_profecional.asig_mov := round(obj_profecional.honorarios * 0.04);
+            elsif obj_profecional.num_emp_comuna = array_comuna(4)
+                then obj_profecional.asig_mov := round(obj_profecional.honorarios * 0.05);
+            elsif obj_profecional.num_emp_comuna = array_comuna(5)
+                then obj_profecional.asig_mov := round(obj_profecional.honorarios * 0.07);
+            else
+                obj_profecional.asig_mov :=  array_comuna(6);
+            end if;
+        end if;
+        --------------asignacion monto por evalucion
+        for i in c_evalucion
+        loop
+            if obj_profecional.puntaje <i.EVA_PUNT_MAX and obj_profecional.puntaje >i.EVA_PUNT_MIN
+                then obj_profecional.asig_eval := round(obj_profecional.honorarios *(i.PORCENTAJE/100));
+            end if;
+        end loop;
+        ---------------asignacion por tipo de contrato
+        obj_profecional.asig_tipo_cont := round(obj_profecional.honorarios * (obj_profecional.contrato_porc/100));
+        --------------asignacion por profesion
+        obj_profecional.asig_profesion := round(obj_profecional.sueldo * (obj_profecional.asignacion_profesion/100));
+        --------------asignacion total
+        obj_profecional.asig_total :=   obj_profecional.asig_mov + obj_profecional.asig_eval + 
+                                        obj_profecional.asig_tipo_cont + obj_profecional.asig_profesion;
+                                        
+        insert into DETALLE_ASIGNACION_MES
+        values ('06','2023',obj_profecional.run,obj_profecional,)
+    end loop;
+    dbms_output.put_line('script corrre corectamente ✔ '|| obj_profecional.asig_total);
+
+end;
